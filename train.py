@@ -317,15 +317,12 @@ def main():
         dataset = pickle.load(file)
 
 
-    random.seed(10)
-    random.shuffle(dataset)
-
     dataset_pd = pd.DataFrame(dataset)
     dataset_pd = dataset_pd[['text', 'query', 'variables', 'db_path']]
 
     raw_dataset = datasets.Dataset.from_pandas(dataset_pd)
     raw_datasets = datasets.DatasetDict({"train": raw_dataset })
-    raw_datasets = raw_datasets['train'].train_test_split(test_size=int(len(raw_dataset) * .2))
+    raw_datasets = raw_datasets['train'].train_test_split(test_size=int(len(raw_dataset) * .2),)
 
 
 
