@@ -28,6 +28,14 @@ import json
 import sqlite3
 from nltk import word_tokenize
 
+#'select', 'from', 'where', 'group', 'order', 'limit', 'intersect', 'union', 'except', 'by', 'having'
+#'join', 'on', 'as'. 'outer', 'inner'
+#'not', 'between', '=', '>', '<', '>=', '<=', '!=', 'in', 'like', 'is', 'exists'
+#'none', 'max', 'min', 'count', 'sum', 'avg'
+#'and', 'or'
+#'intersect', 'union', 'except'
+#'desc', 'asc'
+#',', '(', ')', ';'
 CLAUSE_KEYWORDS = ('select', 'from', 'where', 'group', 'order', 'limit', 'intersect', 'union', 'except')
 JOIN_KEYWORDS = ('join', 'on', 'as')
 
