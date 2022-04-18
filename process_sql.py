@@ -192,6 +192,7 @@ def parse_col_unit(toks, start_idx, tables_with_alias, schema, default_tables=No
     """
         :returns next idx, (agg_op id, col_id)
     """
+
     idx = start_idx
     len_ = len(toks)
     isBlock = False
@@ -227,13 +228,14 @@ def parse_col_unit(toks, start_idx, tables_with_alias, schema, default_tables=No
 
 
 def parse_val_unit(toks, start_idx, tables_with_alias, schema, default_tables=None):
+
     idx = start_idx
     len_ = len(toks)
     isBlock = False
     if toks[idx] == '(':
         isBlock = True
         idx += 1
-
+    
     col_unit1 = None
     col_unit2 = None
     unit_op = UNIT_OPS.index('none')
@@ -302,9 +304,15 @@ def parse_value(toks, start_idx, tables_with_alias, schema, default_tables=None)
 
 
 def parse_condition(toks, start_idx, tables_with_alias, schema, default_tables=None):
+
     idx = start_idx
     len_ = len(toks)
     conds = []
+    isBlock = False
+
+    if toks[idx] == '(':
+        isBlock = True
+        idx += 1
 
     while idx < len_:
         idx, val_unit = parse_val_unit(toks, idx, tables_with_alias, schema, default_tables)
@@ -327,7 +335,11 @@ def parse_condition(toks, start_idx, tables_with_alias, schema, default_tables=N
             val2 = None
 
         conds.append((not_op, op_id, val_unit, val1, val2))
-
+        
+        # if isBlock:
+        #     assert toks[idx] == ')'
+        #     idx += 1
+            
         if idx < len_ and (toks[idx] in CLAUSE_KEYWORDS or toks[idx] in (")", ";") or toks[idx] in JOIN_KEYWORDS):
             break
 
@@ -387,6 +399,7 @@ def parse_from(toks, start_idx, tables_with_alias, schema):
         else:
             if idx < len_ and toks[idx] == 'join':
                 idx += 1  # skip join
+            
             idx, table_unit, table_name = parse_table_unit(toks, idx, tables_with_alias, schema)
             table_units.append((TABLE_TYPE['table_unit'],table_unit))
             default_tables.append(table_name)
@@ -400,13 +413,30 @@ def parse_from(toks, start_idx, tables_with_alias, schema):
         if isBlock:
             assert toks[idx] == ')'
             idx += 1
-        if idx < len_ and (toks[idx] in CLAUSE_KEYWORDS or toks[idx] in (")", ";")):
+        
+        if idx < len_ and toks[idx] == ',':
+            idx += 1  # skip ','
+
+        if idx < len_ and (toks[idx] in CLAUSE_KEYWORDS or toks[idx] in (")", ";") or toks[idx] in ('inner', 'outer')):
             break
+
+        # while idx < len_ and toks[idx] not in CLAUSE_KEYWORDS:
+        #     agg_id = AGG_OPS.index("none")
+        #     if toks[idx] in AGG_OPS:
+        #         agg_id = AGG_OPS.index(toks[idx])
+        #         idx += 1
+        #     idx, val_unit = parse_val_unit(toks, idx, tables_with_alias, schema, default_tables)
+        #     val_units.append((agg_id, val_unit))
+
+
+
+
 
     return idx, table_units, conds, default_tables
 
 
 def parse_where(toks, start_idx, tables_with_alias, schema, default_tables):
+
     idx = start_idx
     len_ = len(toks)
 
