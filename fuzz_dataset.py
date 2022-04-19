@@ -83,7 +83,7 @@ def main():
             
             if(gold_flag == 'exception' or u_flag == 'exception'):
                 continue
-            if not result_eq(gold_denotation, u_denotation, order_matters=False):
+            if not result_eq(gold_denotation, u_denotation, order_matters=False) and len(u_denotation) > 0:
                 if num_added >= args.num_neighbors: break
 
                 undistinguished_neighbors.remove(u)
