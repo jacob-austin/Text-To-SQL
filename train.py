@@ -17,9 +17,13 @@ import transformers
 from transformers import PreTrainedTokenizerFast
 from transformers import RobertaTokenizer, RobertaConfig, RobertaModel
 from process_sql import tokenize
+import torch.nn.functional as F
+import wandb
 
 from torch.utils.data import DataLoader
+import torch.nn as nn
 from tqdm.auto import tqdm
+from transformer_mt import utils
 
 
 logger = logging.getLogger(__file__)
@@ -49,7 +53,7 @@ def parse_args():
     parser.add_argument(
         "--dataset_name",
         type=str,
-        default="stas/wmt14-en-de-pre-processed",
+        default="spider",
         help="The name of the dataset to use (via the datasets library).",
     )
     parser.add_argument(
@@ -307,6 +311,17 @@ def sql_decoder(ids):
     
     return tokens
 
+class BertForClassification(nn.Module):
+    def __init__(self, pre_trained_encoder, num_classes):
+        super().__init__()
+        self.pre_trained_encoder = pre_trained_encoder
+        self.output_layer = nn.Linear(pre_trained_encoder.config.hidden_size, num_classes)
+
+    def forward(self, input_ids, attention_mask):
+        last_hidden_state = self.pre_trained_encoder(input_ids, attention_mask)[0]
+        pooled_output = last_hidden_state[:, 0]
+        return self.output_layer(pooled_output)
+
 def main():
     args = parse_args()
     logger.info(f"Starting script with arguments: {args}")
@@ -410,6 +425,95 @@ def main():
         logger.info(f"Decoded input_ids: {source_tokenizer.decode(batch['input_ids'][index])}")
         logger.info(f"Decoded labels: {sql_decoder(batch['labels'][index])}")
         logger.info("\n")
+
+######################################################################
+# Training loop
+######################################################################
+    model = BertForClassification(pre_trained_encoder=model, num_classes=len(sql_vocab)) 
+    model = model.to(args.device)
+    global_step = 0
+
+    # iterate over epochs
+    for epoch in range(args.num_train_epochs):
+        model.train()  # make sure that model is in training mode, e.g. dropout is enabled
+
+        # iterate over batches
+        for batch in train_dataloader:
+            input_ids = batch["input_ids"].to(args.device)
+            attention_mask = batch["encoder_padding_mask"].to(args.device)
+            labels = batch["labels"].to(args.device)
+
+            logits = model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+            )
+            loss = F.cross_entropy(
+                logits.view(-1, len(sql_vocab)), 
+                labels.view(-1),
+            )
+
+            loss.backward()
+            optimizer.step()
+            lr_scheduler.step()
+            optimizer.zero_grad()
+
+            progress_bar.update(1)
+            global_step += 1
+
+            wandb.log(
+                {
+                    "train_loss": loss,
+                    "learning_rate": optimizer.param_groups[0]["lr"],
+                    "epoch": epoch,
+                },
+                step=global_step,
+            )
+
+            if global_step % args.logging_steps == 0:
+                # An extra training metric that might be useful for understanding
+                # how well the model is doing on the training set.
+                # Please pay attention to it during training.
+                # If the metric is significantly below 80%, there is a chance of a bug somewhere.
+                predictions = logits.argmax(-1)
+                label_nonpad_mask = labels != PAD_INDEX
+                num_words_in_batch = label_nonpad_mask.sum().item()
+
+                accuracy = (predictions == labels).masked_select(label_nonpad_mask).sum().item() / num_words_in_batch
+
+                wandb.log(
+                    {"train_batch_word_accuracy": accuracy},
+                    step=global_step,
+                )
+
+            if global_step % args.eval_every_steps == 0 or global_step == args.max_train_steps:
+                eval_results, last_input_ids, last_decoded_preds, last_decoded_labels = evaluate_model(
+                    model=model,
+                    dataloader=eval_dataloader,
+                    device=args.device,
+                    max_seq_length=args.max_seq_length,
+                    generation_type=args.generation_type,
+                    beam_size=args.beam_size,
+                )
+                # YOUR CODE ENDS HERE
+                wandb.log(
+                    {
+                        "eval/bleu": eval_results["bleu"],
+                        "eval/generation_length": eval_results["generation_length"],
+                    },
+                    step=global_step,
+                )
+                logger.info("Generation example:")
+                random_index = random.randint(0, len(last_input_ids) - 1)
+                logger.info(f"Input sentence: {source_tokenizer.decode(last_input_ids[random_index], skip_special_tokens=True)}")
+                logger.info(f"Generated sentence: {last_decoded_preds[random_index]}")
+                logger.info(f"Reference sentence: {last_decoded_labels[random_index][0]}")
+
+                logger.info("Saving model checkpoint to %s", args.output_dir)
+                model.save_pretrained(args.output_dir)
+
+            if global_step >= args.max_train_steps:
+                break
+
 
 if __name__ == "__main__":
     if version.parse(datasets.__version__) < version.parse("1.18.0"):
