@@ -14,12 +14,16 @@ import datasets
 import pandas as pd 
 
 import transformers
-from transformers import PreTrainedTokenizerFast
+from transformers import AutoTokenizer, PreTrainedTokenizerFast
 from transformers import RobertaTokenizer, RobertaConfig, RobertaModel
 from process_sql import tokenize
 
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
+
+from datasets import load_dataset
+from transformers import AutoModelWithLMHead
+
 
 
 logger = logging.getLogger(__file__)
@@ -34,16 +38,16 @@ def parse_args():
 
 
     #required argument
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        required=True,
-        help=("Where to store the final model. "
-              "Should contain the source and target tokenizers in the following format: "
-              r"output_dir/{source_lang}_tokenizer and output_dir/{target_lang}_tokenizer. "
-              "Both of these should be directories containing tokenizer.json files."
-        ),
-    )
+    # parser.add_argument(
+    #     "--output_dir",
+    #     type=str,
+    #     required=True,
+    #     help=("Where to store the final model. "
+    #           "Should contain the source and target tokenizers in the following format: "
+    #           r"output_dir/{source_lang}_tokenizer and output_dir/{target_lang}_tokenizer. "
+    #           "Both of these should be directories containing tokenizer.json files."
+    #     ),
+    # )
 
     #optional
     parser.add_argument(
@@ -209,22 +213,26 @@ def parse_args():
 
     return args
 
-def preprocess_function(examples, source_tokenizer, target_tokenizer, target_bos_id, target_eos_id, max_seq_length):
+def preprocess_function(examples, source_tokenizer, target_tokenizer, max_seq_length):
     
 
-    inputs = examples['text']
+    inputs = examples['question']
     targets = examples['query']
 
     model_inputs = source_tokenizer(inputs, max_length=max_seq_length, truncation=True)
     
-    target_ids = target_tokenizer(targets)
-
+    target_ids = target_tokenizer(targets, max_length=max_seq_length - 1, truncation=True)
+    
     decoder_input_ids = []
     labels = []
 
+    print(model_inputs['input_ids'][0])
+    print(model_inputs['input_ids'][1])
+
+
     for target in target_ids:
-        decoder_input_ids.append([target_bos_id] + target)
-        labels.append(target + [target_eos_id])
+        decoder_input_ids.append(target)
+        labels.append(target)
 
     model_inputs["decoder_input_ids"] = decoder_input_ids
     model_inputs["labels"] = labels
@@ -311,38 +319,37 @@ def main():
     args = parse_args()
     logger.info(f"Starting script with arguments: {args}")
 
-    dataset = None
+    # dataset = None
 
-    with open("dataset/classical_test.pkl", "rb") as file:
-        dataset = pickle.load(file)
+    # with open("dataset/classical_test.pkl", "rb") as file:
+    #     dataset = pickle.load(file)
+
+    dataset = load_dataset('spider')
+
+    # dataset_pd = pd.DataFrame(dataset)
+    # dataset_pd = dataset_pd[['text', 'query', 'variables', 'db_path']]
+
+    # raw_dataset = datasets.Dataset.from_pandas(dataset_pd)
+    # raw_datasets = datasets.DatasetDict({"train": raw_dataset })
+    # raw_datasets = raw_datasets['train'].train_test_split(test_size=int(len(raw_dataset) * .2),)
 
 
-    dataset_pd = pd.DataFrame(dataset)
-    dataset_pd = dataset_pd[['text', 'query', 'variables', 'db_path']]
 
-    raw_dataset = datasets.Dataset.from_pandas(dataset_pd)
-    raw_datasets = datasets.DatasetDict({"train": raw_dataset })
-    raw_datasets = raw_datasets['train'].train_test_split(test_size=int(len(raw_dataset) * .2),)
-
-
-
-    source_tokenizer = RobertaTokenizer.from_pretrained("microsoft/codebert-base")
-    model = RobertaModel.from_pretrained("microsoft/codebert-base")
+    tokenizer = AutoTokenizer.from_pretrained("mrm8488/t5-base-finetuned-wikiSQL")
+    model = AutoModelWithLMHead.from_pretrained("mrm8488/t5-base-finetuned-wikiSQL")
 
     model.to(args.device)
 
-    column_names = raw_datasets["train"].column_names
+    column_names = dataset["train"].column_names
 
     preprocess_function_wrapped = partial(
         preprocess_function,
         max_seq_length=args.max_seq_length,
-        source_tokenizer=source_tokenizer,
-        target_tokenizer=sql_tokenizer,
-        target_bos_id = BOS_INDEX,
-        target_eos_id = EOS_INDEX
+        source_tokenizer=tokenizer,
+        target_tokenizer=tokenizer,
     )
 
-    processed_datasets = raw_datasets.map(
+    processed_datasets = dataset.map(
         preprocess_function_wrapped,
         batched=True,
         num_proc=args.preprocessing_num_workers,
@@ -358,15 +365,15 @@ def main():
     # Log a few random samples from the training set:
     for index in random.sample(range(len(train_dataset)), 2):
         logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
-        logger.info(f"Decoded input_ids: {source_tokenizer.decode(train_dataset[index]['input_ids'])}")
+        logger.info(f"Decoded input_ids: {tokenizer.decode(train_dataset[index]['input_ids'])}")
         logger.info(f"Decoded labels: {sql_decoder(train_dataset[index]['labels'])}")
         logger.info("\n")
 
-    collation_function_for_seq2seq_wrapped = partial(
-        collation_function_for_seq2seq,
-        source_pad_token_id=source_tokenizer.pad_token_id,
-        target_pad_token_id=PAD_INDEX,
-    )
+    # collation_function_for_seq2seq_wrapped = partial(
+    #     collation_function_for_seq2seq,
+    #     source_pad_token_id=tokenizer.pad_token_id,
+    #     target_pad_token_id=tokenizer.pad_token_id,
+    # )
 
     train_dataloader = DataLoader(
         train_dataset, shuffle=True, collate_fn=collation_function_for_seq2seq_wrapped, batch_size=args.batch_size
@@ -407,7 +414,7 @@ def main():
     batch = next(iter(train_dataloader))
     logger.info("Look at the data that we input into the model, check that it looks like what we expect.")
     for index in random.sample(range(len(batch)), 2):
-        logger.info(f"Decoded input_ids: {source_tokenizer.decode(batch['input_ids'][index])}")
+        logger.info(f"Decoded input_ids: {tokenizer.decode(batch['input_ids'][index])}")
         logger.info(f"Decoded labels: {sql_decoder(batch['labels'][index])}")
         logger.info("\n")
 
