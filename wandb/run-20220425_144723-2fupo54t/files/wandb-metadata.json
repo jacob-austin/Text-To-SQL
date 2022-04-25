@@ -1,0 +1,34 @@
+{
+    "os": "Windows-10-10.0.19041-SP0",
+    "python": "3.7.11",
+    "heartbeatAt": "2022-04-25T18:47:34.698774",
+    "startedAt": "2022-04-25T18:47:23.513895",
+    "docker": null,
+    "gpu": "NVIDIA GeForce MX150",
+    "gpu_count": 1,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [
+        "--ip=127.0.0.1",
+        "--stdin=9013",
+        "--control=9011",
+        "--hb=9010",
+        "--Session.signature_scheme=\"hmac-sha256\"",
+        "--Session.key=b\"3eb5fd73-c342-483b-8fe9-339a0df611dd\"",
+        "--shell=9012",
+        "--transport=\"tcp\"",
+        "--iopub=9014",
+        "--f=C:\\Users\\wasii\\AppData\\Local\\Temp\\tmp-1488hdNkcLlVFfD7.json"
+    ],
+    "state": "running",
+    "program": "<python with no main file>",
+    "git": {
+        "remote": "https://github.com/jacob-austin/Text-To-SQL.git",
+        "commit": "a4c3122a57db1c0170cbc50cb30bac2eb21e7f09"
+    },
+    "email": "wasiimouro@gmail.com",
+    "root": "c:/Users/wasii/Documents/NLP_Class_Project",
+    "host": "LAPTOP-1TLEB1G7",
+    "username": "wasii",
+    "executable": "C:\\Users\\wasii\\anaconda3\\envs\\NLP_class\\python.exe"
+}

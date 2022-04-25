@@ -1,29 +1,3 @@
-################################
-# Assumptions:
-#   1. sql is correct
-#   2. only table name has alias
-#   3. only one intersect/union/except
-#
-# val: number(float)/string(str)/sql(dict)
-# col_unit: (agg_id, col_id, isDistinct(bool))
-# val_unit: (unit_op, col_unit1, col_unit2)
-# table_unit: (table_type, col_unit/sql)
-# cond_unit: (not_op, op_id, val_unit, val1, val2)
-# condition: [cond_unit1, 'and'/'or', cond_unit2, ...]
-# sql {
-#   'select': (isDistinct(bool), [(agg_id, val_unit), (agg_id, val_unit), ...])
-#   'from': {'table_units': [table_unit1, table_unit2, ...], 'conds': condition}
-#   'where': condition
-#   'groupBy': [col_unit1, col_unit2, ...]
-#   'orderBy': ('asc'/'desc', [val_unit1, val_unit2, ...])
-#   'having': condition
-#   'limit': None/limit value
-#   'intersect': None/sql
-#   'except': None/sql
-#   'union': None/sql
-# }
-################################
-
 import json
 import sqlite3
 from nltk import word_tokenize
@@ -168,9 +142,24 @@ def parse_col(toks, start_idx, tables_with_alias, schema, default_tables=None):
     """
         :returns next idx, column id
     """
+
+    isBlock = False
+
+    if toks[start_idx] == '(':
+        isBlock = True
+        start_idx += 1
+
     tok = toks[start_idx]
     if tok == "*":
         return start_idx + 1, schema.idMap[tok]
+
+
+    if isBlock:
+        assert toks[start_idx + 1] == ')'
+        start_idx += 1  # skip ')'
+        #print("token at start_idx is ", toks[start_idx+1])
+
+
 
     if '.' in tok:  # if token is a composite
         alias, col = tok.split('.')
@@ -238,10 +227,17 @@ def parse_val_unit(toks, start_idx, tables_with_alias, schema, default_tables=No
     col_unit2 = None
     unit_op = UNIT_OPS.index('none')
 
+
+    #print("before val_unit", toks[idx])
+
     idx, col_unit1 = parse_col_unit(toks, idx, tables_with_alias, schema, default_tables)
+
+    #print("we got this boy instead of unit op", toks[idx])
+
     if idx < len_ and toks[idx] in UNIT_OPS:
         unit_op = UNIT_OPS.index(toks[idx])
         idx += 1
+        #original parse_col_unit
         idx, col_unit2 = parse_col_unit(toks, idx, tables_with_alias, schema, default_tables)
 
     if isBlock:
@@ -307,6 +303,7 @@ def parse_condition(toks, start_idx, tables_with_alias, schema, default_tables=N
     conds = []
 
     while idx < len_:
+        #print("the token in parse condition", toks[idx])
         idx, val_unit = parse_val_unit(toks, idx, tables_with_alias, schema, default_tables)
         not_op = False
         if toks[idx] == 'not':
@@ -400,7 +397,11 @@ def parse_from(toks, start_idx, tables_with_alias, schema):
         if isBlock:
             assert toks[idx] == ')'
             idx += 1
-        if idx < len_ and (toks[idx] in CLAUSE_KEYWORDS or toks[idx] in (")", ";")):
+        
+        if idx < len_ and toks[idx] == ',':
+            idx += 1  # skip ','
+
+        if idx < len_ and (toks[idx] in CLAUSE_KEYWORDS or toks[idx] in (")", ";",  'outer', 'inner')):
             break
 
     return idx, table_units, conds, default_tables
@@ -410,11 +411,24 @@ def parse_where(toks, start_idx, tables_with_alias, schema, default_tables):
     idx = start_idx
     len_ = len(toks)
 
+
     if idx >= len_ or toks[idx] != 'where':
         return idx, []
 
+    isBlock = False
+
     idx += 1
+
+    if toks[idx] == '(':
+        isBlock = True
+        idx += 1
+
     idx, conds = parse_condition(toks, idx, tables_with_alias, schema, default_tables)
+
+    if isBlock:
+        assert toks[idx] == ')'
+        idx += 1
+
     return idx, conds
 
 
@@ -486,6 +500,10 @@ def parse_limit(toks, start_idx):
 
     if idx < len_ and toks[idx] == 'limit':
         idx += 2
+        # make limit value can work, cannot assume put 1 as a fake limit number
+        if type(toks[idx-1]) != int:
+            return idx, 1
+
         return idx, int(toks[idx-1])
 
     return idx, None
