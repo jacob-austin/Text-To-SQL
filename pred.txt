@@ -1,2 +1,2 @@
-.
-@return {number}
+How many singers we have?
+Total singers:
