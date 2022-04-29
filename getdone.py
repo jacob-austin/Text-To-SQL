@@ -1,6 +1,6 @@
 from sklearn import datasets
 from transformers import RobertaTokenizer, T5ForConditionalGeneration
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 from functools import partial
 
 import random
@@ -111,7 +111,7 @@ class CodeT5_NLSQL(nn.Module):
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
 model = T5ForConditionalGeneration.from_pretrained('Salesforce/codet5-small')
 
-dataset = load_dataset('spider', download_mode="FORCE_REDOWNLOAD")
+dataset = load_dataset('spider')
 
 def preprocess_function(examples, tokenizer, max_seq_length):
     
