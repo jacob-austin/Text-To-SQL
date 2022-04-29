@@ -180,7 +180,7 @@ processed_datasets = dataset.map(
     desc="Running tokenizer on dataset",
 )
 
-processed_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
+processed_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels', 'decoder_attention_mask'])
 
 train_dataset = processed_datasets["train"]
 eval_dataset = processed_datasets["validation"] if "validation" in processed_datasets else processed_datasets["test"]
