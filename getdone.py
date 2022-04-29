@@ -151,8 +151,8 @@ torch.cuda.empty_cache()
 max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 8
-batch_size=32
-num_train_epochs=50
+batch_size=64
+num_train_epochs=25
 device='cuda'
 learning_rate=1e-2
 weight_decay=0.01
@@ -253,7 +253,7 @@ for epoch in range(num_train_epochs):
         outputs = nlsql_model(
             input_ids=input_ids,
             labels=labels,
-            decoder_attention_mask=decoder_attention_mask,
+            #decoder_attention_mask=decoder_attention_mask,
             attention_mask=attention_mask,
         )
 
