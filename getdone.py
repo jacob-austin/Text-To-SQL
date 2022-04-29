@@ -104,7 +104,7 @@ class CodeT5_NLSQL(nn.Module):
     #self.input_layer = nn.Linear(self.input_size)
 
   def forward(self, input_ids, attention_mask, labels=None):
-    outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+    outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, decoder_attention_mask=attention_mask, labels=labels)
     return outputs
 
 
@@ -122,6 +122,7 @@ def preprocess_function(examples, tokenizer, max_seq_length):
     model_inputs = tokenizer(inputs, max_length=max_seq_length, padding="max_length", truncation=True)
     target_ids = tokenizer(targets, max_length=max_seq_length, padding="max_length", truncation=True)
     target_ids = target_ids.input_ids
+    decoder_attention_mask = target_ids.attention_mask
     
     #decoder_input_ids = []
 
@@ -138,6 +139,7 @@ def preprocess_function(examples, tokenizer, max_seq_length):
         labels_with_ignore_index.append(labels_example)
     
     model_inputs["labels"] = labels_with_ignore_index
+    model_inputs["decoder_attention_mask"] = decoder_attention_mask
     return model_inputs
 
 torch.cuda.empty_cache()
@@ -146,15 +148,15 @@ max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 8
 batch_size=8
-num_train_epochs=5
+num_train_epochs=10
 device='cuda'
-learning_rate=2e-5
+learning_rate=2e-2
 weight_decay=0.01
 lr_scheduler_type = 'linear'
-num_warmup_steps = 8000
+num_warmup_steps = 12000
 max_train_steps = 20000
 logging_steps=25
-eval_every_step=25
+eval_every_step=300
 
 column_names = dataset["train"].column_names
 
@@ -246,7 +248,7 @@ for epoch in range(num_train_epochs):
         outputs = nlsql_model(
             input_ids=input_ids,
             labels=labels,
-            attention_mask=attention_mask
+            attention_mask=attention_mask,
         )
 
         loss = outputs.loss
