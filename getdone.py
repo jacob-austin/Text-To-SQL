@@ -106,7 +106,7 @@ class CodeT5_NLSQL(nn.Module):
   def forward(self, input_ids, attention_mask, decoder_attention_mask = None, labels=None):
     
     if decoder_attention_mask == None:
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, decoder_attention_mask=attention_mask, labels=labels)
+        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
     else:
         outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, decoder_attention_mask=decoder_attention_mask, labels=labels)
     return outputs
@@ -253,7 +253,7 @@ for epoch in range(num_train_epochs):
         outputs = nlsql_model(
             input_ids=input_ids,
             labels=labels,
-            decoder_attention_mask=decoder_attention_mask,
+            #decoder_attention_mask=decoder_attention_mask,
             attention_mask=attention_mask,
         )
 
