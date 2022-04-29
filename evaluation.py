@@ -507,10 +507,10 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
         glist = []
         gseq_one = []
         for l in f.readlines():
-            if len(l.strip()) == 0:
-                glist.append(gseq_one)
-                gseq_one = []
-            else:
+            # if len(l.strip()) == 0:
+            #     glist.append(gseq_one)
+            #     gseq_one = []
+            # else:
                 lstrip = l.strip().split('\t')
                 gseq_one.append(lstrip)
 
@@ -528,10 +528,10 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
         plist = []
         pseq_one = []
         for l in f.readlines():
-            if len(l.strip()) == 0:
-                plist.append(pseq_one)
-                pseq_one = []
-            else:
+            # if len(l.strip()) == 0:
+            #     plist.append(pseq_one)
+            #     pseq_one = []
+            # else:
                 pseq_one.append(l.strip().split('\t'))
 
         if len(pseq_one) != 0:

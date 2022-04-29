@@ -109,7 +109,7 @@ class CodeT5_NLSQL(nn.Module):
 
 
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
-model = T5ForConditionalGeneration.from_pretrained('Salesforce/codet5-small')
+model = T5ForConditionalGeneration.from_pretrained('Salesforce/codet5-small', force_download=True)
 
 dataset = load_dataset('spider')
 
