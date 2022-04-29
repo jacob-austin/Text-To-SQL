@@ -143,7 +143,7 @@ def preprocess_function(examples, tokenizer, max_seq_length):
 max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 8
-batch_size=32
+batch_size=64
 num_train_epochs=5
 device='cuda'
 learning_rate=1e-1
@@ -152,7 +152,7 @@ lr_scheduler_type = 'linear'
 num_warmup_steps = 5000
 max_train_steps = 20000
 logging_steps=25
-eval_every_step=1
+eval_every_step=25
 
 column_names = dataset["train"].column_names
 
