@@ -537,7 +537,10 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
         if len(pseq_one) != 0:
             plist.append(pseq_one)
 
-    assert len(plist) == len(glist), "number of sessions must equal"
+    print("plist length is ", len(plist))
+    print("glist length is ", len(glist))
+
+    #assert len(plist) == len(glist), "number of sessions must equal"
 
     evaluator = Evaluator()
     turns = ['turn 1', 'turn 2', 'turn 3', 'turn 4', 'turn > 4']
