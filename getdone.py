@@ -103,8 +103,12 @@ class CodeT5_NLSQL(nn.Module):
 
     #self.input_layer = nn.Linear(self.input_size)
 
-  def forward(self, input_ids, attention_mask, labels=None):
-    outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, decoder_attention_mask=attention_mask, labels=labels)
+  def forward(self, input_ids, attention_mask, decoder_attention_mask = None, labels=None):
+    
+    if decoder_attention_mask == None:
+        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, decoder_attention_mask=attention_mask, labels=labels)
+    else:
+        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, decoder_attention_mask=decoder_attention_mask, labels=labels)
     return outputs
 
 
@@ -244,10 +248,12 @@ for epoch in range(num_train_epochs):
         # key_padding_mask = batch["encoder_padding_mask"].to(device)
         labels = batch["labels"].to(device)
         attention_mask = batch["attention_mask"].to(device)
+        decoder_attention_mask = batch["decoder_attention_mask"].to(device)
 
         outputs = nlsql_model(
             input_ids=input_ids,
             labels=labels,
+            decoder_attention_mask=decoder_attention_mask,
             attention_mask=attention_mask,
         )
 
