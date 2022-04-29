@@ -145,13 +145,13 @@ torch.cuda.empty_cache()
 max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 8
-batch_size=16
+batch_size=8
 num_train_epochs=5
 device='cuda'
 learning_rate=2e-5
 weight_decay=0.01
 lr_scheduler_type = 'linear'
-num_warmup_steps = 10000
+num_warmup_steps = 8000
 max_train_steps = 20000
 logging_steps=25
 eval_every_step=25
