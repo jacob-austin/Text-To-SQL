@@ -140,6 +140,8 @@ def preprocess_function(examples, tokenizer, max_seq_length):
     model_inputs["labels"] = labels_with_ignore_index
     return model_inputs
 
+torch.cuda.empty_cache()
+
 max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 8
