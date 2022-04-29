@@ -75,7 +75,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
     pred_file.write("\n".join(all_preds))
 
     pred_file.close()
-    without_vals_scores_orig = evaluate2('gold.txt', 'pred.txt', "/content/drive/MyDrive/database", 'match', build_foreign_key_map_from_json2('tables.json'))
+    without_vals_scores_orig = evaluate2('gold.txt', 'pred.txt', "database", 'match', build_foreign_key_map_from_json2('tables.json'))
 
     without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), False, False, False)
     with_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), True, False, False)
@@ -111,7 +111,7 @@ class CodeT5_NLSQL(nn.Module):
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
 model = T5ForConditionalGeneration.from_pretrained('Salesforce/codet5-small')
 
-dataset = load_dataset('spider', download_mode="force_redownload")
+dataset = load_dataset('spider')
 
 def preprocess_function(examples, tokenizer, max_seq_length):
     
