@@ -145,7 +145,7 @@ torch.cuda.empty_cache()
 max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 8
-batch_size=32
+batch_size=16
 num_train_epochs=5
 device='cuda'
 learning_rate=2e-5
