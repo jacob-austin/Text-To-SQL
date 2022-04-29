@@ -120,9 +120,9 @@ def preprocess_function(examples, tokenizer, max_seq_length):
     targets = examples['query']
     
     model_inputs = tokenizer(inputs, max_length=max_seq_length, padding="max_length", truncation=True)
-    target_ids = tokenizer(targets, max_length=max_seq_length, padding="max_length", truncation=True)
-    target_ids = target_ids.input_ids
-    decoder_attention_mask = target_ids.attention_mask
+    decoder_inputs = tokenizer(targets, max_length=max_seq_length, padding="max_length", truncation=True)
+    target_ids = decoder_inputs.input_ids
+    decoder_attention_mask = decoder_inputs.attention_mask
     
     #decoder_input_ids = []
 
