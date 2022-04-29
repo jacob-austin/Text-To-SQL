@@ -253,7 +253,7 @@ for epoch in range(num_train_epochs):
         outputs = nlsql_model(
             input_ids=input_ids,
             labels=labels,
-            #decoder_attention_mask=decoder_attention_mask,
+            decoder_attention_mask=decoder_attention_mask,
             attention_mask=attention_mask,
         )
 
