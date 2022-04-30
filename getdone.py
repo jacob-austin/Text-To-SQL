@@ -52,10 +52,9 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
             attention_mask = batch["attention_mask"].to(device)
             #token_type_ids = batch["token_type_ids"].to(device)
             
-            generated_tokens = model.model.generate(
+            generated_tokens = model.generate(
                 input_ids,
                 max_length=max_seq_length,
-                # beam_size=beam_size,
             )
 
 
@@ -80,6 +79,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
                 new_labels.append([value for value in label_row if value != -100])
             
             decoded_labels = tokenizer.batch_decode(new_labels, skip_special_tokens=True)
+            bleu.add_batch(predictions=decoded_preds, references=decoded_labels)
 
     
     pred_file.write("\n".join(all_preds))
@@ -88,8 +88,10 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), False, False, False)
     with_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), True, False, False)
-    
+    eval_metric = bleu.compute()
+
     evaluation_results = {
+        "eval/bleu": eval_metric["score"],
         "eval/exact_match": without_vals_scores['all']['exact'],
         "eval/exact_match(vals)": with_vals_scores['all']['exact']
     }
@@ -116,6 +118,11 @@ class CodeT5_NLSQL(nn.Module):
     outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
     return outputs
 
+  def generate(self, input_ids, max_length):
+      self.model.generate(input_ids, max_length)
+
+  def save_pretrained(self, output_dir):
+      self.model.save_pretrained(output_dir)
 
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
 
@@ -151,7 +158,11 @@ def preprocess_function(examples, tokenizer, max_seq_length):
     model_inputs["labels"] = labels_with_ignore_index
     return model_inputs
 
+
+
 torch.cuda.empty_cache()
+bleu = datasets.load_metric("sacrebleu")
+
 
 max_seq_length=128
 overwrite_cache=True
@@ -295,6 +306,7 @@ for epoch in range(num_train_epochs):
             )    
             wandb.log(
               {
+               "eval/bleu": eval_results["eval/bleu"],
                "eval/exact_match": eval_results['eval/exact_match'], 
                "eval/exact_match(vals)": eval_results["eval/exact_match(vals)"]
               },
