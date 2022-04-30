@@ -34,6 +34,12 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
+def postprocess_text(preds, labels):
+    """Use this function to postprocess generations and labels before BLEU computation."""
+    preds = [pred.strip() for pred in preds]
+    labels = [[label.strip()] for label in labels]
+
+    return preds, labels
 
 def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
     model.eval()
@@ -79,6 +85,9 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
                 new_labels.append([value for value in label_row if value != -100])
             
             decoded_labels = tokenizer.batch_decode(new_labels, skip_special_tokens=True)
+
+            decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
+            
             bleu.add_batch(predictions=decoded_preds, references=decoded_labels)
 
     
@@ -88,10 +97,10 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), False, False, False)
     with_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), True, False, False)
-    eval_metric = bleu.compute()
+    bleu_metric = bleu.compute()
 
     evaluation_results = {
-        "eval/bleu": eval_metric["score"],
+        "eval/bleu": bleu_metric["score"],
         "eval/exact_match": without_vals_scores['all']['exact'],
         "eval/exact_match(vals)": with_vals_scores['all']['exact']
     }
