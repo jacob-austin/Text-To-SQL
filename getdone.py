@@ -119,10 +119,10 @@ class CodeT5_NLSQL(nn.Module):
     return outputs
 
   def generate(self, input_ids, max_length):
-      self.model.generate(input_ids, max_length)
+      return self.model.generate(input_ids, max_length)
 
   def save_pretrained(self, output_dir):
-      self.model.save_pretrained(output_dir)
+      return self.model.save_pretrained(output_dir)
 
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
 
