@@ -113,6 +113,8 @@ class CodeT5_NLSQL(nn.Module):
 
 
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
+
+
 model = T5ForConditionalGeneration.from_pretrained('Salesforce/codet5-small', force_download=True)
 
 dataset = load_dataset('spider')
@@ -152,12 +154,12 @@ max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 8
 batch_size=32
-num_train_epochs=25
+num_train_epochs=5
 device='cuda'
-learning_rate=1e-2
+learning_rate=1e-4
 weight_decay=0.01
 lr_scheduler_type = 'linear'
-num_warmup_steps = 12000
+num_warmup_steps = 200
 max_train_steps = 20000
 logging_steps=25
 eval_every_step=300
@@ -191,6 +193,8 @@ for index in random.sample(range(len(train_dataset)), 2):
     print(f"Decoded input_ids: {tokenizer.decode(train_dataset[index]['input_ids'])}")
     print(f"Decoded labels: {tokenizer.decode([label for label in train_dataset[index]['labels'] if label != -100])}")
     print("\n")
+
+
 
 train_dataloader = DataLoader(
     train_dataset, shuffle=True, batch_size=batch_size
@@ -309,7 +313,7 @@ for epoch in range(num_train_epochs):
             # If the metric is significantly below 80%, there is a chance of a bug somewhere.
             predictions = logits.argmax(-1)
 
-            label_nonpad_mask = labels != tokenizer.pad_token_id
+            label_nonpad_mask = labels != -100
             num_words_in_batch = label_nonpad_mask.sum().item()
 
             accuracy = (predictions == labels).masked_select(label_nonpad_mask).sum().item() / num_words_in_batch
