@@ -101,8 +101,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     evaluation_results = {
         "eval/bleu": bleu_metric["score"],
-        "eval/exact_match": without_vals_scores['all']['exact'],
-        "eval/exact_match(vals)": with_vals_scores['all']['exact']
+        "eval/match_scores": without_vals_scores['all'],
     }
 
 
@@ -181,11 +180,11 @@ num_train_epochs=13
 device='cuda'
 learning_rate=1e-4
 weight_decay=0.01
-lr_scheduler_type = 'linear'
+lr_scheduler_type = 'exponential'
 num_warmup_steps = 200
 max_train_steps = 20000
 logging_steps=25
-eval_every_step=200
+eval_every_step=100
 output_dir = 'output_dir'
 
 column_names = dataset["train"].column_names
@@ -316,8 +315,8 @@ for epoch in range(num_train_epochs):
             wandb.log(
               {
                "eval/bleu": eval_results["eval/bleu"],
-               "eval/exact_match": eval_results['eval/exact_match'], 
-               "eval/exact_match(vals)": eval_results["eval/exact_match(vals)"]
+               "eval/match_scores": eval_results['eval/match_scores'], 
+               #"eval/exact_match(vals)": eval_results["eval/exact_match(vals)"]
               },
               step=global_step,
             )
