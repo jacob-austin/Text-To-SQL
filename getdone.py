@@ -177,7 +177,7 @@ max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 8
 batch_size=32
-num_train_epochs=12
+num_train_epochs=13
 device='cuda'
 learning_rate=1e-4
 weight_decay=0.01
@@ -185,7 +185,7 @@ lr_scheduler_type = 'linear'
 num_warmup_steps = 200
 max_train_steps = 20000
 logging_steps=25
-eval_every_step=300
+eval_every_step=200
 output_dir = 'output_dir'
 
 column_names = dataset["train"].column_names
