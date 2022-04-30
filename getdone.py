@@ -243,7 +243,6 @@ for epoch in range(num_train_epochs):
         # key_padding_mask = batch["encoder_padding_mask"].to(device)
         labels = batch["labels"].to(device)
         attention_mask = batch["attention_mask"].to(device)
-        decoder_attention_mask = batch["decoder_attention_mask"].to(device)
 
         outputs = nlsql_model(
             input_ids=input_ids,
