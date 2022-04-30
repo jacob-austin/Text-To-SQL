@@ -101,7 +101,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     evaluation_results = {
         "eval/bleu": bleu_metric["score"],
-        "eval/exec_with_val": without_vals_scores["exec"],
+        "eval/exec_with_val": without_vals_scores["all"]["exec"],
         "eval/match_scores": match_scores,
     }
 
