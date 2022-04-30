@@ -21,8 +21,6 @@ import torch.nn as nn
 
 
 from evaluation import evaluate, build_foreign_key_map_from_json
-from evaluation_orig import evaluate as evaluate2
-from evaluation_orig import build_foreign_key_map_from_json as build_foreign_key_map_from_json2
 
 
 def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
@@ -75,13 +73,11 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
     pred_file.write("\n".join(all_preds))
 
     pred_file.close()
-    without_vals_scores_orig = evaluate2('gold.txt', 'pred.txt', "database", 'match', build_foreign_key_map_from_json2('tables.json'))
 
     without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), False, False, False)
     with_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), True, False, False)
     
     evaluation_results = {
-        "orig_eval/exact_match": without_vals_scores_orig['all']['exact'],
         "eval/exact_match": without_vals_scores['all']['exact'],
         "eval/exact_match(vals)": with_vals_scores['all']['exact']
     }
@@ -103,12 +99,9 @@ class CodeT5_NLSQL(nn.Module):
 
     #self.input_layer = nn.Linear(self.input_size)
 
-  def forward(self, input_ids, attention_mask, decoder_attention_mask = None, labels=None):
+  def forward(self, input_ids, attention_mask, labels=None):
     
-    if decoder_attention_mask == None:
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-    else:
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, decoder_attention_mask=decoder_attention_mask, labels=labels)
+    outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
     return outputs
 
 
@@ -128,7 +121,6 @@ def preprocess_function(examples, tokenizer, max_seq_length):
     model_inputs = tokenizer(inputs, max_length=max_seq_length, padding="max_length", truncation=True)
     decoder_inputs = tokenizer(targets, max_length=max_seq_length, padding="max_length", truncation=True)
     target_ids = decoder_inputs.input_ids
-    decoder_attention_mask = decoder_inputs.attention_mask
     
     #decoder_input_ids = []
 
@@ -145,7 +137,6 @@ def preprocess_function(examples, tokenizer, max_seq_length):
         labels_with_ignore_index.append(labels_example)
     
     model_inputs["labels"] = labels_with_ignore_index
-    model_inputs["decoder_attention_mask"] = decoder_attention_mask
     return model_inputs
 
 torch.cuda.empty_cache()
@@ -182,7 +173,7 @@ processed_datasets = dataset.map(
     desc="Running tokenizer on dataset",
 )
 
-processed_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels', 'decoder_attention_mask'])
+processed_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
 
 train_dataset = processed_datasets["train"]
 eval_dataset = processed_datasets["validation"] if "validation" in processed_datasets else processed_datasets["test"]
@@ -257,7 +248,6 @@ for epoch in range(num_train_epochs):
         outputs = nlsql_model(
             input_ids=input_ids,
             labels=labels,
-            #decoder_attention_mask=decoder_attention_mask,
             attention_mask=attention_mask,
         )
 
@@ -293,7 +283,6 @@ for epoch in range(num_train_epochs):
             )    
             wandb.log(
               {
-               "orig_eval/exact_match": eval_results['orig_eval/exact_match'],     
                "eval/exact_match": eval_results['eval/exact_match'], 
                "eval/exact_match(vals)": eval_results["eval/exact_match(vals)"]
               },
