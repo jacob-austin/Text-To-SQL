@@ -95,13 +95,14 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     pred_file.close()
 
-    #without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), False, False, False)
+    without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), False, False, False)
     match_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), True, False, False)
     bleu_metric = bleu.compute()
 
     evaluation_results = {
         "eval/bleu": bleu_metric["score"],
-        "eval/match_scores": match_scores['all'],
+        "eval/exec_with_val": without_vals_scores["exec"],
+        "eval/match_scores": match_scores,
     }
 
 
@@ -316,6 +317,7 @@ for epoch in range(num_train_epochs):
               {
                "eval/bleu": eval_results["eval/bleu"],
                "eval/match_scores": eval_results['eval/match_scores'], 
+               "eval/exec_with_val": eval_results['eval/exec_with_val'], 
                #"eval/exact_match(vals)": eval_results["eval/exact_match(vals)"]
               },
               step=global_step,
