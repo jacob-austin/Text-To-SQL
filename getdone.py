@@ -95,8 +95,8 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     pred_file.close()
 
-    without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), False, False, False)
-    match_scores = evaluate('gold.txt', 'pred.txt', 'database', 'match', build_foreign_key_map_from_json('tables.json'), True, False, False)
+    without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'all', build_foreign_key_map_from_json('tables.json'), False, False, False)
+    match_scores = evaluate('gold.txt', 'pred.txt', 'database', 'all', build_foreign_key_map_from_json('tables.json'), True, False, False)
     bleu_metric = bleu.compute()
 
     evaluation_results = {
