@@ -185,7 +185,7 @@ lr_scheduler_type = 'linear'
 num_warmup_steps = 200
 max_train_steps = 20000
 logging_steps=25
-eval_every_step=10
+eval_every_step=300
 output_dir = 'output_dir'
 
 column_names = dataset["train"].column_names
