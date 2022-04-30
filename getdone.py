@@ -4,10 +4,12 @@ from datasets import Dataset, load_dataset
 from functools import partial
 
 import random
+import os
 import logging
 import tqdm
 from tqdm.auto import tqdm
 
+import logging
 
 import wandb
 import transformers
@@ -21,6 +23,16 @@ import torch.nn as nn
 
 
 from evaluation import evaluate, build_foreign_key_map_from_json
+
+
+
+# Setup logging
+logger = logging.getLogger(__file__)
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=logging.INFO,
+)
 
 
 def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
@@ -154,6 +166,7 @@ num_warmup_steps = 200
 max_train_steps = 20000
 logging_steps=25
 eval_every_step=300
+output_dir = 'output_dir'
 
 column_names = dataset["train"].column_names
 
@@ -292,6 +305,8 @@ for epoch in range(num_train_epochs):
             print(f"Input sentence: {tokenizer.decode(last_input_ids[random_index], skip_special_tokens=True)}")
             print(f"Generated sentence: {last_decoded_preds[random_index]}")
             print(f"Reference sentence: {last_decoded_labels[random_index]}")
+            
+            model.save_pretrained(output_dir)
 
 
         if global_step % logging_steps == 0:
@@ -310,6 +325,7 @@ for epoch in range(num_train_epochs):
                 {"train_batch_word_accuracy": accuracy},
                 step=global_step,
             )
+
             
             # print("Generation example:")
             # random_index = random.randint(0, len(last_input_ids) - 1)
@@ -348,5 +364,12 @@ for epoch in range(num_train_epochs):
 
         # if global_step >= args.max_train_steps:
         #     break
+logger.info("Saving final model checkpoint to %s", output_dir)
+model.save_pretrained(output_dir)
+
+logger.info("Uploading tokenizer, model and config to wandb")
+wandb.save(os.path.join(output_dir, "*"))
+
+logger.info(f"Script finished succesfully, model saved in {output_dir}")
 
 run.finish()  # stop wandb run
