@@ -1,4 +1,4 @@
-from sklearn import datasets
+import datasets
 from transformers import RobertaTokenizer, T5ForConditionalGeneration
 from datasets import Dataset, load_dataset
 from functools import partial
