@@ -226,11 +226,11 @@ preprocess_function_wrapped = partial(
     tokenizer=tokenizer,
 )
 
-preprocess_function_wrapped2 = partial(
-    preprocess_function2,
-    max_seq_length=max_seq_length,
-    tokenizer=tokenizer,
-)
+# preprocess_function_wrapped2 = partial(
+#     preprocess_function2,
+#     max_seq_length=max_seq_length,
+#     tokenizer=tokenizer,
+# )
 
 
 processed_datasets = dataset.map(
@@ -242,19 +242,19 @@ processed_datasets = dataset.map(
     desc="Running tokenizer on dataset",
 )
 
-processed_wiki_datasets = wiki_dataset.map(
-    preprocess_function_wrapped2,
-    batched=True,
-    num_proc=preprocessing_num_workers,
-    remove_columns=wiki_column_names,
-    load_from_cache_file=not overwrite_cache,
-    desc="Running tokenizer on dataset",
-)
+# processed_wiki_datasets = wiki_dataset.map(
+#     preprocess_function_wrapped2,
+#     batched=True,
+#     num_proc=preprocessing_num_workers,
+#     remove_columns=wiki_column_names,
+#     load_from_cache_file=not overwrite_cache,
+#     desc="Running tokenizer on dataset",
+# )
 
-processed_wiki_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
+#processed_wiki_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
 processed_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
 
-train_dataset = processed_wiki_datasets["train"]
+train_dataset = processed_datasets["train"]
 eval_dataset = processed_datasets["validation"] if "validation" in processed_datasets else processed_datasets["test"]
 
 # Log a few random samples from the training set:
