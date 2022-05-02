@@ -189,7 +189,8 @@ logging_steps=25
 eval_every_step=10
 output_dir = 'output_dir'
 
-column_names = wiki_dataset["train"].column_names
+wiki_column_names = wiki_dataset["train"].column_names
+column_names = dataset['train'].column_names
 
 preprocess_function_wrapped = partial(
     preprocess_function,
@@ -211,7 +212,7 @@ processed_wiki_datasets = wiki_dataset.map(
     preprocess_function_wrapped,
     batched=True,
     num_proc=preprocessing_num_workers,
-    remove_columns=column_names,
+    remove_columns=wiki_column_names,
     load_from_cache_file=not overwrite_cache,
     desc="Running tokenizer on dataset",
 )
