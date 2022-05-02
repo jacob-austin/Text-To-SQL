@@ -141,11 +141,39 @@ model = T5ForConditionalGeneration.from_pretrained('Salesforce/codet5-small', fo
 dataset = load_dataset('spider')
 wiki_dataset = load_dataset('wikisql')
 
-def preprocess_function(examples, tokenizer, max_seq_length):
+def preprocess_function2(examples, tokenizer, max_seq_length):
     
 
     inputs = examples['question']
     targets = examples['sql']['human_readable']
+    
+    model_inputs = tokenizer(inputs, max_length=max_seq_length, padding="max_length", truncation=True)
+    decoder_inputs = tokenizer(targets, max_length=max_seq_length, padding="max_length", truncation=True)
+    target_ids = decoder_inputs.input_ids
+    
+    #decoder_input_ids = []
+
+    # for target in target_ids:
+    #     decoder_input_ids.append([tokenizer.bos_token_id] + target)
+    #     labels.append(target + [tokenizer.eos_token_id])
+
+    # model_inputs["decoder_input_ids"] = decoder_input_ids
+
+    labels_with_ignore_index = []
+    
+    for labels_example in target_ids:
+        labels_example = [label if label != 0 else -100 for label in labels_example]
+        labels_with_ignore_index.append(labels_example)
+    
+    model_inputs["labels"] = labels_with_ignore_index
+    return model_inputs
+
+
+def preprocess_function(examples, tokenizer, max_seq_length):
+    
+
+    inputs = examples['question']
+    targets = examples['query']
     
     model_inputs = tokenizer(inputs, max_length=max_seq_length, padding="max_length", truncation=True)
     decoder_inputs = tokenizer(targets, max_length=max_seq_length, padding="max_length", truncation=True)
@@ -198,6 +226,12 @@ preprocess_function_wrapped = partial(
     tokenizer=tokenizer,
 )
 
+preprocess_function_wrapped2 = partial(
+    preprocess_function2,
+    max_seq_length=max_seq_length,
+    tokenizer=tokenizer,
+)
+
 
 processed_datasets = dataset.map(
     preprocess_function_wrapped,
@@ -209,7 +243,7 @@ processed_datasets = dataset.map(
 )
 
 processed_wiki_datasets = wiki_dataset.map(
-    preprocess_function_wrapped,
+    preprocess_function_wrapped2,
     batched=True,
     num_proc=preprocessing_num_workers,
     remove_columns=wiki_column_names,
