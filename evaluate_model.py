@@ -162,7 +162,7 @@ eval_every_step=100
 output_dir = 'output_dir'
 
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
-model = T5ForConditionalGeneration.from_pretrained('./output_dir')
+model = T5ForConditionalGeneration.from_pretrained('./output_dir_second_run')
 
 dataset = load_dataset('spider')
 
