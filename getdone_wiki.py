@@ -251,6 +251,7 @@ processed_wiki_datasets = wiki_dataset.map(
     desc="Running tokenizer on dataset",
 )
 
+processed_wiki_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
 processed_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
 
 train_dataset = processed_wiki_datasets["train"]
