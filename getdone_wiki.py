@@ -214,7 +214,7 @@ lr_scheduler_type = 'polynomial'
 num_warmup_steps = 200
 max_train_steps = 20000
 logging_steps=25
-eval_every_step=10
+eval_every_step=30
 output_dir = 'output_dir'
 
 wiki_column_names = wiki_dataset["train"].column_names
