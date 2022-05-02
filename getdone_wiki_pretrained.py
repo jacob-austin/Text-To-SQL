@@ -217,7 +217,7 @@ logging_steps=25
 eval_every_step=400
 output_dir = 'output_dir'
 
-wiki_column_names = wiki_dataset["train"].column_names
+#wiki_column_names = wiki_dataset["train"].column_names
 column_names = dataset['train'].column_names
 
 preprocess_function_wrapped = partial(
