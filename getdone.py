@@ -133,10 +133,10 @@ class CodeT5_NLSQL(nn.Module):
   def save_pretrained(self, output_dir):
       return self.model.save_pretrained(output_dir)
 
-tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
+tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-base')
 
 
-model = T5ForConditionalGeneration.from_pretrained('Salesforce/codet5-small', force_download=True)
+model = T5ForConditionalGeneration.from_pretrained('Salesforce/codet5-base', force_download=True)
 
 dataset = load_dataset('spider')
 
