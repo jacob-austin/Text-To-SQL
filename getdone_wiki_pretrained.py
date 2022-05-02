@@ -139,7 +139,7 @@ tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
 model = T5ForConditionalGeneration.from_pretrained('./wiki_run')
 
 dataset = load_dataset('spider')
-wiki_dataset = load_dataset('wikisql')
+#wiki_dataset = load_dataset('wikisql')
 
 def preprocess_function2(examples, tokenizer, max_seq_length):
     
