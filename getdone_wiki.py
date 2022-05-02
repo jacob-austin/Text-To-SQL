@@ -203,7 +203,7 @@ bleu = datasets.load_metric("sacrebleu")
 
 
 max_seq_length=128
-overwrite_cache=True
+overwrite_cache=False
 preprocessing_num_workers = 8
 batch_size=32
 num_train_epochs=1
@@ -214,7 +214,7 @@ lr_scheduler_type = 'polynomial'
 num_warmup_steps = 200
 max_train_steps = 20000
 logging_steps=25
-eval_every_step=30
+eval_every_step=200
 output_dir = 'output_dir'
 
 wiki_column_names = wiki_dataset["train"].column_names
