@@ -145,7 +145,7 @@ def preprocess_function2(examples, tokenizer, max_seq_length):
     
 
     inputs = examples['question']
-    targets = examples['sql']['human_readable']
+    targets = [ex['human_readable'] for ex in examples['sql']]
     
     model_inputs = tokenizer(inputs, max_length=max_seq_length, padding="max_length", truncation=True)
     decoder_inputs = tokenizer(targets, max_length=max_seq_length, padding="max_length", truncation=True)
