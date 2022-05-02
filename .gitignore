@@ -132,3 +132,4 @@ database/
 wandb/
 database.zip
 output_dir
+data/
