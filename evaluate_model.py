@@ -49,7 +49,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     avg_batch_acc = 0
     pred_file = open("pred.txt", "w")
-
+    runs = 0
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluation"):
             input_ids = batch["input_ids"].to(device)
@@ -90,14 +90,16 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
             decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
             
             bleu.add_batch(predictions=decoded_preds, references=decoded_labels)
-
+            runs += 1
+            if runs > 4:
+                break
     
     pred_file.write("\n".join(all_preds))
 
     pred_file.close()
 
-    without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database2', 'all', build_foreign_key_map_from_json('tables.json'), False, False, False)
-    match_scores = evaluate('gold.txt', 'pred.txt', 'database', 'all', build_foreign_key_map_from_json('tables.json'), True, False, False)
+    without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database2', 'all', build_foreign_key_map_from_json('tables2.json'), False, False, False)
+    match_scores = evaluate('gold.txt', 'pred.txt', 'database2', 'all', build_foreign_key_map_from_json('tables2.json'), True, False, False)
     bleu_metric = bleu.compute()
 
     evaluation_results = {
@@ -152,7 +154,7 @@ dataset = load_dataset('spider')
 max_seq_length=128
 overwrite_cache=True
 preprocessing_num_workers = 1
-batch_size=len(dataset['train'])
+batch_size=8
 num_train_epochs=30
 device='cpu'
 learning_rate=1e-4
@@ -176,7 +178,7 @@ preprocess_function_wrapped = partial(
 )
 
 
-processed_datasets = dataset['train'].map(
+processed_datasets = dataset.map(
     preprocess_function_wrapped,
     batched=True,
     num_proc=preprocessing_num_workers,
@@ -187,7 +189,7 @@ processed_datasets = dataset['train'].map(
 
 processed_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
 
-train_dataset = processed_datasets
+train_dataset = processed_datasets['train']
 #eval_dataset = processed_datasets["validation"] if "validation" in processed_datasets else processed_datasets["test"]
 
 # Log a few random samples from the training set:
