@@ -49,7 +49,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     avg_batch_acc = 0
     pred_file = open("pred.txt", "w")
-    runs = 0
+
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluation"):
             input_ids = batch["input_ids"].to(device)
@@ -90,10 +90,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
             decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
             
             bleu.add_batch(predictions=decoded_preds, references=decoded_labels)
-            runs += 1
-            if runs > 4:
-                break
-    
+
     pred_file.write("\n".join(all_preds))
 
     pred_file.close()
