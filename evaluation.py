@@ -511,7 +511,7 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
             #     glist.append(gseq_one)
             #     gseq_one = []
             # else:
-                lstrip = l.strip().split('\t')
+                lstrip = l.strip().rsplit('\t', 1)
                 gseq_one.append(lstrip)
 
         # include the last session

@@ -21,7 +21,7 @@ import torch
 from torch.utils.data import DataLoader
 import torch.nn as nn
 
-
+#from evaluation_orig import evaluate, build_foreign_key_map_from_json
 from evaluation import evaluate, build_foreign_key_map_from_json
 
 
@@ -96,13 +96,13 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
     pred_file.close()
 
     without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database2', 'all', build_foreign_key_map_from_json('tables2.json'), False, False, False)
-    match_scores = evaluate('gold.txt', 'pred.txt', 'database2', 'all', build_foreign_key_map_from_json('tables2.json'), True, False, False)
+   # match_scores = evaluate('gold.txt', 'pred.txt', 'database2', 'all', build_foreign_key_map_from_json('tables2.json'), True, False, False)
     bleu_metric = bleu.compute()
 
     evaluation_results = {
         "eval/bleu": bleu_metric["score"],
         "eval/exec_without_val": without_vals_scores,
-        "eval/match_scores": match_scores,
+        #"eval/match_scores": match_scores,
     }
 
 
@@ -238,9 +238,8 @@ eval_results, last_input_ids, last_decoded_preds, last_decoded_labels = evaluate
 wandb.log(
     {
     "eval/bleu": eval_results["eval/bleu"],
-    "eval/match_scores": eval_results['eval/match_scores'], 
+    #"eval/match_scores": eval_results['eval/match_scores'], 
     "eval/exec_without_val": eval_results['eval/exec_without_val'], 
-    #"eval/exact_match(vals)": eval_results["eval/exact_match(vals)"]
     },
     step=global_step,
 )
