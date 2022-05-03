@@ -61,6 +61,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
             generated_tokens = model.generate(
                 input_ids,
                 max_length=max_seq_length,
+                num_beams=4
             )
 
 
@@ -95,7 +96,7 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
 
     pred_file.close()
 
-    without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database', 'all', build_foreign_key_map_from_json('tables.json'), False, False, False)
+    without_vals_scores = evaluate('gold.txt', 'pred.txt', 'database2', 'all', build_foreign_key_map_from_json('tables.json'), False, False, False)
     match_scores = evaluate('gold.txt', 'pred.txt', 'database', 'all', build_foreign_key_map_from_json('tables.json'), True, False, False)
     bleu_metric = bleu.compute()
 
@@ -145,11 +146,13 @@ def preprocess_function(examples, tokenizer, max_seq_length):
 torch.cuda.empty_cache()
 bleu = datasets.load_metric("sacrebleu")
 
+dataset = load_dataset('spider')
+
 
 max_seq_length=128
 overwrite_cache=True
-preprocessing_num_workers = 8
-batch_size=16
+preprocessing_num_workers = 1
+batch_size=len(dataset['train'])
 num_train_epochs=30
 device='cpu'
 learning_rate=1e-4
@@ -162,9 +165,7 @@ eval_every_step=100
 output_dir = 'output_dir'
 
 tokenizer = RobertaTokenizer.from_pretrained('Salesforce/codet5-small')
-model = T5ForConditionalGeneration.from_pretrained('./output_dir_second_run')
-
-dataset = load_dataset('spider')
+model = T5ForConditionalGeneration.from_pretrained('./output_dir')
 
 column_names = dataset["train"].column_names
 
@@ -175,7 +176,7 @@ preprocess_function_wrapped = partial(
 )
 
 
-processed_datasets = dataset.map(
+processed_datasets = dataset['train'].map(
     preprocess_function_wrapped,
     batched=True,
     num_proc=preprocessing_num_workers,
@@ -186,8 +187,8 @@ processed_datasets = dataset.map(
 
 processed_datasets.set_format(type="torch", columns=['input_ids', 'attention_mask', 'labels'])
 
-train_dataset = processed_datasets["train"]
-eval_dataset = processed_datasets["validation"] if "validation" in processed_datasets else processed_datasets["test"]
+train_dataset = processed_datasets
+#eval_dataset = processed_datasets["validation"] if "validation" in processed_datasets else processed_datasets["test"]
 
 # Log a few random samples from the training set:
 for index in random.sample(range(len(train_dataset)), 2):
@@ -202,9 +203,9 @@ train_dataloader = DataLoader(
     train_dataset, shuffle=True, batch_size=batch_size
 )
 
-eval_dataloader = DataLoader(
-    eval_dataset, shuffle=False, batch_size=batch_size
-)
+# eval_dataloader = DataLoader(
+#     eval_dataset, shuffle=False, batch_size=batch_size
+# )
 
 model.to(device)
 
