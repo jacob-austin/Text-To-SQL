@@ -56,23 +56,14 @@ def evaluate_model(model, dataloader, tokenizer, max_seq_length, device):
             labels = batch["labels"].to(device)
 
             attention_mask = batch["attention_mask"].to(device)
-            #token_type_ids = batch["token_type_ids"].to(device)
             
             generated_tokens = model.generate(
                 input_ids,
                 max_length=max_seq_length,
             )
 
-
-            #logits = model(input_ids=input_ids, labels=labels, attention_mask=attention_mask)
-
-            #preds = torch.argmax(logits, dim=-1)
-            #metric.add_batch(predictions=preds, references=labels)
             decoded_preds = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
             
-            # for row in decoded_preds:
-            #   all_preds.append(row)
-
             labels = labels.tolist()
 
 
@@ -115,12 +106,7 @@ class CodeT5_NLSQL(nn.Module):
 
   def __init__(self, model):
     super().__init__()
-
     self.model = model
-    #self.input_size = model.config.to_dict()['hidden_size']
-    #self.num_classes = num_classes
-
-    #self.input_layer = nn.Linear(self.input_size)
 
   def forward(self, input_ids, attention_mask, labels=None):
     
@@ -149,14 +135,6 @@ def preprocess_function(examples, tokenizer, max_seq_length):
     model_inputs = tokenizer(inputs, max_length=max_seq_length, padding="max_length", truncation=True)
     decoder_inputs = tokenizer(targets, max_length=max_seq_length, padding="max_length", truncation=True)
     target_ids = decoder_inputs.input_ids
-    
-    #decoder_input_ids = []
-
-    # for target in target_ids:
-    #     decoder_input_ids.append([tokenizer.bos_token_id] + target)
-    #     labels.append(target + [tokenizer.eos_token_id])
-
-    # model_inputs["decoder_input_ids"] = decoder_input_ids
 
     labels_with_ignore_index = []
     
@@ -272,8 +250,6 @@ for epoch in range(num_train_epochs):
     # iterate over batches
     for batch in train_dataloader:
         input_ids = batch["input_ids"].to(device)
-        # decoder_input_ids = batch["decoder_input_ids"].to(device)
-        # key_padding_mask = batch["encoder_padding_mask"].to(device)
         labels = batch["labels"].to(device)
         attention_mask = batch["attention_mask"].to(device)
 
@@ -349,43 +325,6 @@ for epoch in range(num_train_epochs):
             )
 
             
-            # print("Generation example:")
-            # random_index = random.randint(0, len(last_input_ids) - 1)
-            # print(f"Input sentence: {tokenizer.decode(last_input_ids[random_index], skip_special_tokens=True)}")
-            # print(f"Generated sentence: {last_decoded_preds[random_index]}")
-            # print(f"Reference sentence: {last_decoded_labels[random_index][0]}")
-
-        # if global_step % args.eval_every_steps == 0 or global_step == args.max_train_steps:
-        #     eval_results, last_input_ids, last_decoded_preds, last_decoded_labels = evaluate_model(
-        #         model=model,
-        #         dataloader=eval_dataloader,
-        #         target_tokenizer=target_tokenizer,
-        #         device=args.device,
-        #         max_seq_length=args.max_seq_length,
-        #         generation_type=args.generation_type,
-        #         beam_size=args.beam_size,
-        #         max_eval_steps=args.max_eval_steps
-        #     )
-        #     # YOUR CODE ENDS HERE
-        #     wandb.log(
-        #         {
-        #             "eval/bleu": eval_results["bleu"],
-        #             "eval/generation_length": eval_results["generation_length"],
-        #         },
-        #         step=global_step,
-        #     )
-        #     logger.info("Generation example:")
-        #     random_index = random.randint(0, len(last_input_ids) - 1)
-        #     logger.info(f"Input sentence: {source_tokenizer.decode(last_input_ids[random_index], skip_special_tokens=True)}")
-        #     logger.info(f"Generated sentence: {last_decoded_preds[random_index]}")
-        #     logger.info(f"Reference sentence: {last_decoded_labels[random_index][0]}")
-
-
-        #     logger.info("Saving model checkpoint to %s", args.output_dir)
-        #     model.save_pretrained(args.output_dir)
-
-        # if global_step >= args.max_train_steps:
-        #     break
 logger.info("Saving final model checkpoint to %s", output_dir)
 model.save_pretrained(output_dir)
 

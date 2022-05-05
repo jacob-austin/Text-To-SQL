@@ -1,1 +1,0 @@
-{"train_loss": 3.6822938919067383, "learning_rate": 9.968500000000001e-06, "epoch": 0, "eval/exact_match": 0.0, "eval/exact_match(vals)": 0.0, "_runtime": 165, "_timestamp": 1650990763, "_step": 32, "train_batch_word_accuracy": 0.03515625}

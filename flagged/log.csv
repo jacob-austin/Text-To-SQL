@@ -1,2 +1,0 @@
-'nl str','output','timestamp'
-'get all players older than 15 and younger than 20','SELECT player FROM player WHERE age  >  15 INTERSECT SELECT player FROM player WHERE age  <  20','2022-05-03 00:30:43.181563'
